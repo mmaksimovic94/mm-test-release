@@ -30,7 +30,7 @@ jobs:
           pip install packaging
 
       - name: Run script to update dependencies
-        run: python scripts/update_debug.py
+        run: python scripts/update_debug.py || echo "Python script exited with code 1" && exit 1
 
       - name: Stop if no updates were made
         if: failure()  # Runs if the previous step fails (exit code 1)
