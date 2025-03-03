@@ -1,5 +1,6 @@
 import json
 import subprocess
+import packaging.version
 
 CONANFILE_PATH = "conanfile.py"
 
@@ -7,7 +8,7 @@ def get_conan_dependencies():
     """Retrieves current dependencies using `conan graph info`."""
     try:
         result = subprocess.run(
-            ["conan", "graph", "info", CONANFILE_PATH, "--format=json"],
+            ["conan", "graph", "info", CONANFILE_PATH, "-f=json"],
             capture_output=True, text=True, check=True
         )
         print("Raw Conan output:", result.stdout)  # Debugging line
@@ -32,8 +33,19 @@ def get_latest_version(package_name):
             ["conan", "search", f"{package_name}/*", "--remote", "conancenter", "--raw"],
             capture_output=True, text=True, check=True
         )
-        versions = [line.split("/")[1] for line in result.stdout.splitlines() if package_name in line]
-        return sorted(versions, key=lambda v: [int(x) for x in v.split(".")])[-1] if versions else None
+        versions = []
+        search_data = list(json.loads(result.stdout)["conancenter"].keys())
+        for key in search_data:
+            version = key.split("/")[-1]
+            if version.replace(".", "").isdigit():
+                versions.append(version)
+
+        latest_version = max(versions, key=packaging.version.parse)
+
+        return latest_version
+
+        # versions = [line.split("/")[1] for line in result.stdout.splitlines() if package_name in line]
+        # return sorted(versions, key=lambda v: [int(x) for x in v.split(".")])[-1] if versions else None
     except subprocess.CalledProcessError:
         print(f"Failed to fetch latest version for {package_name}")
         return None

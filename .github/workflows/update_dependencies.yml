@@ -24,7 +24,9 @@ jobs:
           conan profile detect
 
       - name: Install Python dependencies
-        run: pip install requests
+        run: |
+          pip install requests
+          pip install packaging
 
       - name: Check Conan version
         run: conan --version
