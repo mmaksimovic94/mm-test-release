@@ -31,7 +31,6 @@ jobs:
 
       - name: Run script to update dependencies
         run: python scripts/update_debug.py
-        continue-on-error: true
 
       - name: Stop if no updates were made
         if: failure()  # Runs if the previous step fails (exit code 1)
