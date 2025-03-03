@@ -18,7 +18,8 @@ def get_conan_dependencies():
 
         for node in graph_data:
             if "ref" in node and node["name"] != "hello_world":
-                dependencies.append(node["ref"])
+                ref_value = node["ref"].split("#")[0]
+                dependencies.append(ref_value)
 
         return dependencies
     except subprocess.CalledProcessError as e:
