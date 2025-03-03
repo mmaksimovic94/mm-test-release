@@ -13,10 +13,10 @@ class HelloWorldConan(ConanFile):
         self.folders.build = "build"
 
     def requirements(self):
-        self.requires("gtest/1.10.0")
+        self.requires("gtest/1.15.0")
 
     def build_requirements(self):
-        self.build_requires("cmake/3.30.1")
+        self.build_requires("cmake/3.31.6")
 
     def build(self):
         cmake = CMake(self)
