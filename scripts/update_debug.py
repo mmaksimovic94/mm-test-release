@@ -13,26 +13,39 @@ def get_conan_dependencies():
         print("Raw Conan output:", result.stdout)  # Debugging line
         graph_data = list(json.loads(result.stdout)["graph"]["nodes"].values())
         
-        requires = []
-        build_requires = []
+        dependencies = []
 
         for node in graph_data:
-            if "ref" in node:
-                ref = node["ref"]
-                if "build_requires" in node.get("context", ""):
-                    build_requires.append(ref)
-                else:
-                    requires.append(ref)
+            if "ref" in node and node["name"] != "hello_world":
+                dependencies.append(node["ref"])
 
-        return requires, build_requires
+        return dependencies
     except subprocess.CalledProcessError as e:
         print("Failed to retrieve Conan dependencies.")
         print("Error message:", e.stderr)
-        return [], []
+        return []
+
+def get_latest_version(package_name):
+    """Returns the latest version of a package from Conan."""
+    try:
+        result = subprocess.run(
+            ["conan", "search", f"{package_name}/*", "--remote", "conancenter", "--raw"],
+            capture_output=True, text=True, check=True
+        )
+        versions = [line.split("/")[1] for line in result.stdout.splitlines() if package_name in line]
+        return sorted(versions, key=lambda v: [int(x) for x in v.split(".")])[-1] if versions else None
+    except subprocess.CalledProcessError:
+        print(f"Failed to fetch latest version for {package_name}")
+        return None
 
 # Test function
 if __name__ == "__main__":
     print("Checking Conan dependencies...")
-    reqs, build_reqs = get_conan_dependencies()
-    print("Requires:", reqs)
-    print("Build requires:", build_reqs)
+    deps_list = get_conan_dependencies()
+    print("Deps list:", deps_list)
+    for dep in deps_list:
+        package, current_version = dep.split("/")[0], dep.split("/")[1]
+        latest_version = get_latest_version(package)
+        print(f"Package: {package} - Current version: {current_version} - Latest version: {latest_version}")
+
+
