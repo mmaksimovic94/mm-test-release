@@ -36,7 +36,9 @@ jobs:
 
       - name: Exit if no changes were made
         if: steps.update_deps.outcome != 'success'
-        run: echo "No changes detected, exiting workflow." && exit 0
+        run: |
+          echo "No changes detected, exiting workflow."
+          exit 0
 
       - name: Create feature branch
         run: |
