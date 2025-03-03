@@ -51,14 +51,39 @@ def get_latest_version(package_name):
         print(f"Failed to fetch latest version for {package_name}")
         return None
 
+def update_conanfile():
+    """Updates dependencies in conanfile.py to the latest versions and returns True if modified."""
+    dependencies = get_conan_dependencies()
+    print("Deps list:", dependencies)
+    
+    if not dependencies:
+        print("No dependencies found to update.")
+        return False
+
+    with open(CONANFILE_PATH, "r") as file:
+        lines = file.readlines()
+
+    modified = False
+
+    for i, line in enumerate(lines):
+        for dep in dependencies:
+            package, current_version = dep.split("/")[0], dep.split("/")[1]
+            latest_version = get_latest_version(package)
+            print(f"Package: {package} - Current version: {current_version} - Latest version: {latest_version}")
+            if latest_version and latest_version != current_version:
+                print(f"Updating {package} from {current_version} to {latest_version}")
+                lines[i] = line.replace(f'"{package}/{current_version}"', f'"{package}/{latest_version}"')
+                modified = True
+
+    if modified:
+        with open(CONANFILE_PATH, "w") as file:
+            file.writelines(lines)
+
+    return modified
+
 # Test function
 if __name__ == "__main__":
-    print("Checking Conan dependencies...")
-    deps_list = get_conan_dependencies()
-    print("Deps list:", deps_list)
-    for dep in deps_list:
-        package, current_version = dep.split("/")[0], dep.split("/")[1]
-        latest_version = get_latest_version(package)
-        print(f"Package: {package} - Current version: {current_version} - Latest version: {latest_version}")
+    modified = update_conanfile()
+    exit(0 if modified else 1)  # Exit with 0 if updates were made, 1 if not
 
 
