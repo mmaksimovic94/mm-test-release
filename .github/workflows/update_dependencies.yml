@@ -19,9 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Conan
-        uses: turtlebrowser/setup-conan@v1
-        with:
-          version: 2.x
+        run: |
+          pip install conan
+          conan profile detect
 
       - name: Install Python dependencies
         run: pip install requests
