@@ -1,6 +1,7 @@
 import json
 import subprocess
 import packaging.version
+import re
 
 CONANFILE_PATH = "conanfile.py"
 
@@ -61,25 +62,40 @@ def update_conanfile():
         return False
 
     with open(CONANFILE_PATH, "r") as file:
-        lines = file.readlines()
+        content = file.read()
 
-    modified = False
 
-    for i, line in enumerate(lines):
-        for dep in dependencies:
-            package, current_version = dep.split("/")[0], dep.split("/")[1]
-            latest_version = get_latest_version(package)
-            print(f"Package: {package} - Current version: {current_version} - Latest version: {latest_version}")
-            if latest_version and latest_version != current_version:
-                print(f"Updating {package} from {current_version} to {latest_version}")
-                lines[i] = line.replace(f'"{package}/{current_version}"', f'"{package}/{latest_version}"')
-                modified = True
+    def replace_version(match, dependencies):
+        package = match.group(1)
+        old_version = match.group(2)
+        new_version = "5.5.5"
+        print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
+        return f"{match.group(0).replace(old_version, new_version)}"
 
-    if modified:
-        with open(CONANFILE_PATH, "w") as file:
-            file.writelines(lines)
+    updated_content = re.sub(r'(self\.(?:requires|build_requires)\("([^"]+)/)([^"]+)("\))', replace_version, content)
 
-    return modified
+    with open(CONANFILE_PATH, "w") as file:
+        file.write(updated_content)
+
+    print("Updated conanfile.py with new dependency versions.")
+
+
+    # modified = False
+
+    # for i, line in enumerate(lines):
+    #     for dep in dependencies:
+    #         package, current_version = dep.split("/")[0], dep.split("/")[1]
+    #         latest_version = get_latest_version(package)
+    #         if latest_version and latest_version != current_version:
+    #             print(f"Updating {package} from {current_version} to {latest_version}")
+    #             lines[i] = line.replace(f'"{package}/{current_version}"', f'"{package}/{latest_version}"')
+    #             modified = True
+
+    # if modified:
+    #     with open(CONANFILE_PATH, "w") as file:
+    #         file.writelines(lines)
+
+    # return modified
 
 # Test function
 if __name__ == "__main__":

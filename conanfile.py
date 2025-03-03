@@ -13,8 +13,6 @@ class HelloWorldConan(ConanFile):
         self.folders.build = "build"
 
     def requirements(self):
-        # self.requires("fmt/8.1.1")
-        # self.requires("spdlog/1.9.2")
         self.requires("gtest/1.10.0")
 
     def build_requirements(self):
