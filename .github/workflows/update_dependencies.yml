@@ -29,18 +29,9 @@ jobs:
           pip install requests
           pip install packaging
 
-      - name: Check Conan version
-        run: conan --version
-
-      - name: Show conanfile before
-        run: cat conanfile.py
-
       - name: Run script to update dependencies
         run: python scripts/update_debug.py
-
-      - name: Show conanfile after
-        run: cat conanfile.py
-
+        continue-on-error: true
 
       - name: Stop if no updates were made
         if: failure()  # Runs if the previous step fails (exit code 1)
