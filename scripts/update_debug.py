@@ -11,12 +11,12 @@ def get_conan_dependencies():
             capture_output=True, text=True, check=True
         )
         print("Raw Conan output:", result.stdout)  # Debugging line
-        graph_data = json.loads(result.stdout)
+        graph_data = list(json.loads(result.stdout)["graph"]["nodes"].values())
         
         requires = []
         build_requires = []
 
-        for node in graph_data["nodes"].values():
+        for node in graph_data:
             if "ref" in node:
                 ref = node["ref"]
                 if "build_requires" in node.get("context", ""):
