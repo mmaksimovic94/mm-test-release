@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.MM_GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up Conan
