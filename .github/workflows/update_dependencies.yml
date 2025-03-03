@@ -34,18 +34,14 @@ jobs:
         run: python scripts/update_debug.py
         continue-on-error: true
 
-      - name: Exit if no changes were made
-        if: steps.update_deps.outcome != 'success'
-        run: |
-          echo "No changes detected, exiting workflow."
-          exit 0
-
       - name: Create feature branch
+        if: steps.update_deps.outcome == 'success'
         run: |
           BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
           git checkout -b "$BRANCH_NAME"
 
       - name: Commit and push changes
+        if: steps.update_deps.outcome == 'success'
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
@@ -54,6 +50,7 @@ jobs:
           git push origin HEAD
 
       - name: Create Pull Request feature -> main
+        if: steps.update_deps.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
         run: |
@@ -67,6 +64,7 @@ jobs:
                -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"$BRANCH_NAME\", \"base\":\"main\"}"
 
       - name: Create Pull Request main -> integration
+        if: steps.update_deps.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
         run: |
