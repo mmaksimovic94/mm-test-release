@@ -12,7 +12,7 @@ def get_conan_dependencies():
             ["conan", "graph", "info", CONANFILE_PATH, "-f=json"],
             capture_output=True, text=True, check=True
         )
-        print("Raw Conan output:", result.stdout)  # Debugging line
+        # print("Raw Conan output:", result.stdout)  # Debugging line
         graph_data = list(json.loads(result.stdout)["graph"]["nodes"].values())
         
         dependencies = []
@@ -65,19 +65,23 @@ def update_conanfile():
         content = file.read()
 
 
-    def replace_version(match, dependencies):
-        package = match.group(1)
-        old_version = match.group(2)
-        new_version = "5.5.5"
+    def replace_version(match):
+        package = match.group(2)
+        old_version = match.group(3)
+        new_version = get_latest_version(package)
         print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
         return f"{match.group(0).replace(old_version, new_version)}"
 
     updated_content = re.sub(r'(self\.(?:requires|build_requires)\("([^"]+)/)([^"]+)("\))', replace_version, content)
 
-    with open(CONANFILE_PATH, "w") as file:
-        file.write(updated_content)
-
-    print("Updated conanfile.py with new dependency versions.")
+    if updated_content != content:
+        with open(CONANFILE_PATH, "w") as file:
+            file.write(updated_content)
+        print("Updated conanfile.py with new dependency versions.")
+        return True
+    
+    print("No changes were made to conanfile.")
+    return False
 
 
     # modified = False
