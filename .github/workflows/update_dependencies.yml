@@ -61,15 +61,27 @@ jobs:
           git commit -m "${{ inputs.TASK_ID }}: Update dependencies to latest integration versions"
           git push origin HEAD
 
-      - name: Create Pull Request using GitHub REST API
+      - name: Create Pull Request feature -> main
         env:
           GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
-          PR_TITLE="Update dependencies to latest integration versions"
+          PR_TITLE="${{ inputs.TASK_ID }}: Update dependencies to latest integration versions"
           PR_BODY="This PR updates Conan dependencies to the latest available versions on the 'integration' channel."
           
           curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
                -H "Accept: application/vnd.github.v3+json" \
                https://api.github.com/repos/${{ github.repository }}/pulls \
                -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"$BRANCH_NAME\", \"base\":\"main\"}"
+
+      - name: Create Pull Request main -> integration
+        env:
+          GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
+        run: |
+          PR_TITLE="${{ inputs.TASK_ID }}: Sync with integration"
+          PR_BODY="This PR syncs main branch to integration branch."
+          
+          curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/${{ github.repository }}/pulls \
+               -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"main\", \"base\":\"integration\"}"
