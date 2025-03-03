@@ -18,7 +18,7 @@ class HelloWorldConan(ConanFile):
         self.requires("gtest/1.10.0")
 
     def build_requirements(self):
-        self.build_requires("cmake/3.21.1")
+        self.build_requires("cmake/3.30.1")
 
     def build(self):
         cmake = CMake(self)
