@@ -47,28 +47,28 @@ jobs:
           echo "No dependency updates were found. Stopping workflow."
           exit 0  # Exit gracefully
 
-      # - name: Create feature branch
-      #   run: |
-      #     BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
-      #     git checkout -b "$BRANCH_NAME"
+      - name: Create feature branch
+        run: |
+          BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
+          git checkout -b "$BRANCH_NAME"
 
-      # - name: Commit and push changes
-      #   run: |
-      #     git config --global user.name "github-actions"
-      #     git config --global user.email "github-actions@github.com"
-      #     git add conanfile.py
-      #     git commit -m "Update dependencies to latest integration versions"
-      #     git push origin HEAD
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add conanfile.py
+          git commit -m "${{ inputs.TASK_ID }}: Update dependencies to latest integration versions"
+          git push origin HEAD
 
-      # - name: Create Pull Request using GitHub REST API
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
-      #   run: |
-      #     BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
-      #     PR_TITLE="Update dependencies to latest integration versions"
-      #     PR_BODY="This PR updates Conan dependencies to the latest available versions on the 'integration' channel."
+      - name: Create Pull Request using GitHub REST API
+        env:
+          GITHUB_TOKEN: ${{ secrets.MM_GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
+          PR_TITLE="Update dependencies to latest integration versions"
+          PR_BODY="This PR updates Conan dependencies to the latest available versions on the 'integration' channel."
           
-      #     curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-      #          -H "Accept: application/vnd.github.v3+json" \
-      #          https://api.github.com/repos/${{ github.repository }}/pulls \
-      #          -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"$BRANCH_NAME\", \"base\":\"main\"}"
+          curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/${{ github.repository }}/pulls \
+               -d "{\"title\":\"$PR_TITLE\", \"body\":\"$PR_BODY\", \"head\":\"$BRANCH_NAME\", \"base\":\"main\"}"
