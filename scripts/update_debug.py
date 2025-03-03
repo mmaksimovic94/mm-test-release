@@ -30,7 +30,7 @@ def get_latest_version(package_name):
     """Returns the latest version of a package from Conan."""
     try:
         result = subprocess.run(
-            ["conan", "search", f"{package_name}/*", "--remote", "conancenter", "--raw"],
+            ["conan", "search", f"{package_name}/*", "--remote", "conancenter", "-f=json"],
             capture_output=True, text=True, check=True
         )
         versions = []
