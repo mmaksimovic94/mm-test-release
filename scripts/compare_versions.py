@@ -17,8 +17,8 @@ def get_version(branch):
         sys.exit(1)
 
 def main():
-    develop_version = get_version("main")
     integration_version = get_version("integration")
+    develop_version = get_version("main")
 
     if develop_version != integration_version:
         print(f"❌ Package versions do not match! (Develop: {develop_version}, Integration: {integration_version})")

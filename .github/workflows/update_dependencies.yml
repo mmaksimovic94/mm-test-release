@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.MM_GITHUB_TOKEN }}
+          ref: main
           fetch-depth: 0
 
       - name: Set up Conan
