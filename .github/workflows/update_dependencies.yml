@@ -34,6 +34,10 @@ jobs:
         run: python scripts/update_debug.py
         continue-on-error: true
 
+      - name: Run version comparison script
+        run: python scripts/compare_versions.py
+        continue-on-error: true
+
       - name: Create feature branch
         if: steps.update_deps.outcome == 'success'
         run: |
