@@ -58,15 +58,16 @@ def update_conanfile():
 
     def replace_version(match):
         package = match.group(2)
-        old_version = match.group(3)  # Could be "1.11.0" or "[~1.11.0]"
+        old_version = match.group(3)  # Can be "1.11.0", "[~1.11.0]", "[^9.0.0]"
         new_version = get_latest_version(package)
 
         if new_version:
             print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
 
-            # Preserve square brackets if they exist
+            # Preserve caret (^) or tilde (~) if present inside square brackets
             if old_version.startswith("[") and old_version.endswith("]"):
-                return f'{match.group(1)}[{new_version}]{match.group(4)}'
+                constraint_symbol = re.match(r"\[(\^|~)?", old_version).group(1) or ""
+                return f'{match.group(1)}[{constraint_symbol}{new_version}]{match.group(4)}'
             else:
                 return f'{match.group(1)}{new_version}{match.group(4)}'
 
