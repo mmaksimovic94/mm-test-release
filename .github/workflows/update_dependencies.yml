@@ -43,6 +43,7 @@ jobs:
         if: steps.update_deps.outcome == 'success'
         run: |
           BRANCH_NAME="feature/${{ inputs.TASK_ID }}-update-dependencies"
+          git checkout main
           git checkout -b "$BRANCH_NAME"
 
       - name: Commit and push changes
