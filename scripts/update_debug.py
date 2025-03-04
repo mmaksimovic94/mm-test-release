@@ -5,74 +5,63 @@ import re
 
 CONANFILE_PATH = "conanfile.py"
 
-def get_conan_dependencies():
-    """Retrieves current dependencies using `conan graph info`."""
-    try:
-        result = subprocess.run(
-            ["conan", "graph", "info", CONANFILE_PATH, "-f=json"],
-            capture_output=True, text=True, check=True
-        )
-        # print("Raw Conan output:", result.stdout)  # Debugging line
-        graph_data = list(json.loads(result.stdout)["graph"]["nodes"].values())
-        
-        dependencies = []
-
-        for node in graph_data:
-            if "ref" in node and node["name"] != "hello_world":
-                ref_value = node["ref"].split("#")[0]
-                dependencies.append(ref_value)
-
-        return dependencies
-    except subprocess.CalledProcessError as e:
-        print("Failed to retrieve Conan dependencies.")
-        print("Error message:", e.stderr)
-        return []
-
 def get_latest_version(package_name):
-    """Returns the latest version of a package from Conan."""
+    """Returns the latest version of a package from Conan with the integration channel."""
     try:
+        print(f"Fetching latest version for package: {package_name}")
+        # result = subprocess.run(
+        #     ["conan", "list", f"{package_name}/*@*/integration", "-f=json"],  # Fetch only @*/integration versions
+        #     capture_output=True, text=True, check=True
+        # )
         result = subprocess.run(
             ["conan", "search", f"{package_name}/*", "--remote", "conancenter", "-f=json"],
             capture_output=True, text=True, check=True
         )
         versions = []
+
         search_data = list(json.loads(result.stdout)["conancenter"].keys())
         for key in search_data:
-            version = key.split("/")[-1]
-            if version.replace(".", "").isdigit():
-                versions.append(version)
+            match = re.match(rf"{package_name}/([\d\.]+)", key)
+            # match = re.match(rf"{package_name}/([\d\.]+)@(.+)/integration", key)  # Match only @*/integration versions
+            if match:
+                versions.append(match.group(1))
+            else:
+                print(f"No match for key: {key}")
 
-        latest_version = max(versions, key=packaging.version.parse)
+        if versions:
+            latest_version = max(versions, key=packaging.version.parse)
+            return latest_version
 
-        return latest_version
-
-        # versions = [line.split("/")[1] for line in result.stdout.splitlines() if package_name in line]
-        # return sorted(versions, key=lambda v: [int(x) for x in v.split(".")])[-1] if versions else None
     except subprocess.CalledProcessError:
         print(f"Failed to fetch latest version for {package_name}")
         return None
 
 def update_conanfile():
     """Updates dependencies in conanfile.py to the latest versions and returns True if modified."""
-    dependencies = get_conan_dependencies()
-    print("Deps list:", dependencies)
-    
-    if not dependencies:
-        print("No dependencies found to update.")
-        return False
 
     with open(CONANFILE_PATH, "r") as file:
         content = file.read()
 
-
     def replace_version(match):
-        package = match.group(2)
-        old_version = match.group(3)
+        full_match = match.group(0)
+        package = match.group(1)  # Extract package name
+        old_version = match.group(2)  # Extract version (e.g., "1.1.0", "[~1.1.0]", "[^1.1.0]")
         new_version = get_latest_version(package)
-        print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
-        return f"{match.group(0).replace(old_version, new_version)}"
 
-    updated_content = re.sub(r'(self\.(?:requires|build_requires)\("([^"]+)/)([^"]+)("\))', replace_version, content)
+        if new_version:
+            print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
+
+            # Preserve caret (^) or tilde (~) if present inside square brackets
+            if old_version.startswith("[") and old_version.endswith("]"):
+                constraint_symbol = re.match(r"\[(\^|~)?", old_version).group(1) or ""
+                return full_match.replace(old_version, f"[{constraint_symbol}{new_version}]")
+            else:
+                return full_match.replace(old_version, new_version)
+
+        return full_match  # Keep original if no new version is found
+
+    # Updated regex to match conanfile.py format correctly
+    updated_content = re.sub(r'self\.(?:build_)?requires\("([^/]+)/(\S+?)(?:@\S+)?"\)', replace_version, content)
 
     if updated_content != content:
         with open(CONANFILE_PATH, "w") as file:
@@ -83,27 +72,7 @@ def update_conanfile():
     print("No changes were made to conanfile.")
     return False
 
-
-    # modified = False
-
-    # for i, line in enumerate(lines):
-    #     for dep in dependencies:
-    #         package, current_version = dep.split("/")[0], dep.split("/")[1]
-    #         latest_version = get_latest_version(package)
-    #         if latest_version and latest_version != current_version:
-    #             print(f"Updating {package} from {current_version} to {latest_version}")
-    #             lines[i] = line.replace(f'"{package}/{current_version}"', f'"{package}/{latest_version}"')
-    #             modified = True
-
-    # if modified:
-    #     with open(CONANFILE_PATH, "w") as file:
-    #         file.writelines(lines)
-
-    # return modified
-
 # Test function
 if __name__ == "__main__":
     modified = update_conanfile()
     exit(0 if modified else 1)  # Exit with 0 if updates were made, 1 if not
-
-
