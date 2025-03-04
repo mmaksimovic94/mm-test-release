@@ -46,31 +46,31 @@ def get_latest_version(package_name):
 
         return latest_version
 
-        # versions = [line.split("/")[1] for line in result.stdout.splitlines() if package_name in line]
-        # return sorted(versions, key=lambda v: [int(x) for x in v.split(".")])[-1] if versions else None
     except subprocess.CalledProcessError:
         print(f"Failed to fetch latest version for {package_name}")
         return None
 
 def update_conanfile():
     """Updates dependencies in conanfile.py to the latest versions and returns True if modified."""
-    dependencies = get_conan_dependencies()
-    print("Deps list:", dependencies)
-    
-    if not dependencies:
-        print("No dependencies found to update.")
-        return False
 
     with open(CONANFILE_PATH, "r") as file:
         content = file.read()
 
-
     def replace_version(match):
         package = match.group(2)
-        old_version = match.group(3)
+        old_version = match.group(3)  # Could be "1.11.0" or "[~1.11.0]"
         new_version = get_latest_version(package)
-        print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
-        return f"{match.group(0).replace(old_version, new_version)}"
+
+        if new_version:
+            print(f"Package: {package} - Current version: {old_version} - New version: {new_version}")
+
+            # Preserve square brackets if they exist
+            if old_version.startswith("[") and old_version.endswith("]"):
+                return f'{match.group(1)}[{new_version}]{match.group(4)}'
+            else:
+                return f'{match.group(1)}{new_version}{match.group(4)}'
+
+        return match.group(0)  # Keep original if no new version is found
 
     updated_content = re.sub(r'(self\.(?:requires|build_requires)\("([^"]+)/)([^"]+)("\))', replace_version, content)
 
@@ -82,24 +82,6 @@ def update_conanfile():
     
     print("No changes were made to conanfile.")
     return False
-
-
-    # modified = False
-
-    # for i, line in enumerate(lines):
-    #     for dep in dependencies:
-    #         package, current_version = dep.split("/")[0], dep.split("/")[1]
-    #         latest_version = get_latest_version(package)
-    #         if latest_version and latest_version != current_version:
-    #             print(f"Updating {package} from {current_version} to {latest_version}")
-    #             lines[i] = line.replace(f'"{package}/{current_version}"', f'"{package}/{latest_version}"')
-    #             modified = True
-
-    # if modified:
-    #     with open(CONANFILE_PATH, "w") as file:
-    #         file.writelines(lines)
-
-    # return modified
 
 # Test function
 if __name__ == "__main__":
