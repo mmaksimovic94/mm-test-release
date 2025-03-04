@@ -3,7 +3,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 
 class HelloWorldConan(ConanFile):
     name = "hello_world"
-    version = "1.0"
+    version = "1.0.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps", "CMakeToolchain"
     exports_sources = "CMakeLists.txt", "src/*"
